@@ -2,104 +2,129 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Chiller Management System - 2D SCADA PRO</title>
+<title>3D Chiller SCADA Demo</title>
 <style>
-body{margin:0;background:white;font-family:Segoe UI,Arial}
-svg{width:1920px;height:1080px;display:block;margin:auto}
-
-/* Pipes */
-.pipeCW{stroke:#d6a04b;stroke-width:14;fill:none;stroke-linecap:round}
-.pipeCHWS{stroke:#00bfff;stroke-width:14;fill:none;stroke-linecap:round}
-.pipeCHWR{stroke:#6c63ff;stroke-width:14;fill:none;stroke-linecap:round}
-.flow{stroke-dasharray:25;animation:flow 1s linear infinite}
-@keyframes flow{to{stroke-dashoffset:-50}}
-
-.label{font-size:18px;fill:#222}
-.title{font-size:30px;font-weight:bold}
+body{margin:0;overflow:hidden;background:#d0d3d6;}
+#panel{
+ position:absolute;
+ top:20px;left:20px;
+ background:rgba(255,255,255,.9);
+ padding:15px;border-radius:8px;
+ font-family:Segoe UI;
+}
+button{padding:6px 12px;margin-top:5px}
 </style>
 </head>
 <body>
 
-<svg viewBox="0 0 1920 1080">
+<div id="panel">
+<b>CHILLER PLANT</b><br>
+Supply Temp: <span id="temp">45°F</span><br>
+<button onclick="start()">START</button>
+<button onclick="stop()">STOP</button>
+</div>
 
-<text x="650" y="60" class="title">CHILLER MANAGEMENT SYSTEM</text>
+<script src="https://cdn.jsdelivr.net/npm/three@0.158/build/three.min.js"></script>
 
-<!-- ================= COOLING TOWER ================= -->
-<g transform="translate(150,150)">
-  <!-- body -->
-  <polygon points="0,0 180,0 150,200 30,200" fill="#cfd6dd" stroke="#555" stroke-width="3"/>
-  <!-- grill -->
-  <line x1="40" y1="40" x2="140" y2="40" stroke="#888" stroke-width="2"/>
-  <line x1="40" y1="70" x2="140" y2="70" stroke="#888" stroke-width="2"/>
-  <line x1="40" y1="100" x2="140" y2="100" stroke="#888" stroke-width="2"/>
-  <!-- legs -->
-  <rect x="30" y="200" width="20" height="40" fill="#999"/>
-  <rect x="130" y="200" width="20" height="40" fill="#999"/>
-</g>
-<text x="200" y="130" class="label">CT-01</text>
+<script>
+let scene = new THREE.Scene();
+let camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 1, 5000);
+let renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-<g transform="translate(400,150)">
-  <polygon points="0,0 180,0 150,200 30,200" fill="#cfd6dd" stroke="#555" stroke-width="3"/>
-  <line x1="40" y1="40" x2="140" y2="40" stroke="#888" stroke-width="2"/>
-  <line x1="40" y1="70" x2="140" y2="70" stroke="#888" stroke-width="2"/>
-  <line x1="40" y1="100" x2="140" y2="100" stroke="#888" stroke-width="2"/>
-  <rect x="30" y="200" width="20" height="40" fill="#999"/>
-  <rect x="130" y="200" width="20" height="40" fill="#999"/>
-</g>
-<text x="450" y="130" class="label">CT-02</text>
+// Camera fixed isometric
+camera.position.set(900,700,900);
+camera.lookAt(0,0,0);
 
-<!-- ================= CHILLERS ================= -->
-<g transform="translate(750,500)">
-  <ellipse cx="0" cy="75" rx="40" ry="75" fill="#cfd6dd" stroke="#555" stroke-width="3"/>
-  <rect x="0" y="0" width="300" height="150" fill="#d9dee4" stroke="#555" stroke-width="3"/>
-  <ellipse cx="300" cy="75" rx="40" ry="75" fill="#cfd6dd" stroke="#555" stroke-width="3"/>
-</g>
-<text x="820" y="480" class="label">CH-01</text>
+// Lighting
+let light = new THREE.DirectionalLight(0xffffff,1);
+light.position.set(500,1000,500);
+scene.add(light);
+scene.add(new THREE.AmbientLight(0x888888));
 
-<g transform="translate(1150,500)">
-  <ellipse cx="0" cy="75" rx="40" ry="75" fill="#cfd6dd" stroke="#555" stroke-width="3"/>
-  <rect x="0" y="0" width="300" height="150" fill="#d9dee4" stroke="#555" stroke-width="3"/>
-  <ellipse cx="300" cy="75" rx="40" ry="75" fill="#cfd6dd" stroke="#555" stroke-width="3"/>
-</g>
-<text x="1220" y="480" class="label">CH-02</text>
+// Floor
+let floorGeo = new THREE.PlaneGeometry(2000,2000);
+let floorMat = new THREE.MeshPhongMaterial({color:0xaaaaaa});
+let floor = new THREE.Mesh(floorGeo,floorMat);
+floor.rotation.x = -Math.PI/2;
+scene.add(floor);
 
-<!-- ================= PUMP SYMBOL ================= -->
-<defs>
-  <g id="pumpSymbol">
-    <circle cx="0" cy="0" r="35" fill="#2ecc71" stroke="#222" stroke-width="3"/>
-    <path d="M-10,-15 L20,0 L-10,15 Z" fill="white"/>
-  </g>
-</defs>
+// Cooling Tower
+function createTower(x,z){
+ let bodyGeo = new THREE.BoxGeometry(120,250,120);
+ let bodyMat = new THREE.MeshPhongMaterial({color:0xcfd6dd});
+ let body = new THREE.Mesh(bodyGeo,bodyMat);
+ body.position.set(x,125,z);
+ scene.add(body);
+}
+createTower(-500,-300);
+createTower(-300,-300);
 
-<!-- CDP -->
-<use href="#pumpSymbol" x="200" y="750"/>
-<use href="#pumpSymbol" x="350" y="750"/>
-<use href="#pumpSymbol" x="500" y="750"/>
-<text x="150" y="820" class="label">CDP-01</text>
-<text x="300" y="820" class="label">CDP-02</text>
-<text x="450" y="820" class="label">CDP-03</text>
+// Chiller
+function createChiller(x,z){
+ let geo = new THREE.CylinderGeometry(60,60,350,32);
+ let mat = new THREE.MeshPhongMaterial({color:0xd9dee4});
+ let chill = new THREE.Mesh(geo,mat);
+ chill.rotation.z = Math.PI/2;
+ chill.position.set(x,100,z);
+ scene.add(chill);
+}
+createChiller(0,0);
+createChiller(350,0);
 
-<!-- CHP -->
-<use href="#pumpSymbol" x="900" y="900"/>
-<use href="#pumpSymbol" x="1050" y="900"/>
-<use href="#pumpSymbol" x="1200" y="900"/>
-<text x="850" y="970" class="label">CHP-01</text>
-<text x="1000" y="970" class="label">CHP-02</text>
-<text x="1150" y="970" class="label">CHP-03</text>
+// Pump
+function createPump(x,z){
+ let geo = new THREE.CylinderGeometry(40,40,80,32);
+ let mat = new THREE.MeshPhongMaterial({color:0x2ecc71});
+ let pump = new THREE.Mesh(geo,mat);
+ pump.position.set(x,40,z);
+ scene.add(pump);
+ return pump;
+}
 
-<!-- ================= PIPING (CURVED) ================= -->
-<!-- Condenser -->
-<path d="M250 350 V700 H500 Q650 700 750 575" class="pipeCW flow"/>
-<!-- CHW Supply -->
-<path d="M1100 575 H1650" class="pipeCHWS flow"/>
-<!-- CHW Return -->
-<path d="M1650 630 Q1400 800 900 900" class="pipeCHWR flow"/>
+let pumps=[];
+pumps.push(createPump(-500,200));
+pumps.push(createPump(-350,200));
+pumps.push(createPump(-200,200));
+pumps.push(createPump(100,350));
+pumps.push(createPump(250,350));
+pumps.push(createPump(400,350));
 
-<!-- Building -->
-<rect x="1650" y="550" width="200" height="120" fill="#e2e8f0" stroke="#555" stroke-width="3"/>
-<text x="1660" y="530" class="label">BUILDING RETURN</text>
+// Pipes
+function pipe(x1,y1,z1,x2,y2,z2,color){
+ let mat=new THREE.MeshPhongMaterial({color:color});
+ let dir=new THREE.Vector3(x2-x1,y2-y1,z2-z1);
+ let len=dir.length();
+ let geo=new THREE.CylinderGeometry(15,15,len,16);
+ let mesh=new THREE.Mesh(geo,mat);
+ mesh.position.set((x1+x2)/2,(y1+y2)/2,(z1+z2)/2);
+ mesh.lookAt(new THREE.Vector3(x2,y2,z2));
+ mesh.rotateX(Math.PI/2);
+ scene.add(mesh);
+}
+pipe(-450,80,-300,-450,80,0,0xd6a04b); // CW
+pipe(0,80,0,800,80,0,0x00bfff); // CHWS
 
-</svg>
+let running=false;
+let temp=45;
+
+function start(){running=true;}
+function stop(){running=false;}
+
+function animate(){
+ requestAnimationFrame(animate);
+
+ if(running){
+   temp -= 0.02;
+   pumps.forEach(p=>p.rotation.y+=0.1);
+ }
+ document.getElementById("temp").innerText=temp.toFixed(1)+"°F";
+
+ renderer.render(scene,camera);
+}
+animate();
+</script>
 
 </body>
 </html>
