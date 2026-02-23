@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Plant Room BMS Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body{background:#101418;color:white;font-family:Arial;text-align:center}
+.panel{display:inline-block;border:1px solid #444;padding:10px;margin:8px;width:200px}
+.on{background:green}
+.off{background:#333}
+.alarm{color:red;font-weight:bold}
+.normal{color:#00ff99;font-weight:bold}
+input[type=range]{width:250px}
+h3{margin:5px}
+</style>
+</head>
+<body>
+
+<h2>Water-Cooled Chiller Plant Dashboard</h2>
+
+<button onclick="startPlant()">START</button>
+<button onclick="stopPlant()">STOP</button>
+<button onclick="resetAlarm()">RESET</button>
+
+<h3>Alarm: <span id="alarmText" class="normal">NONE</span></h3>
+
+<p>Load %</p>
+<input type="range" min="10" max="100" value="50" id="loadSlider">
+<span id="loadVal">50</span> %
+
+<br><br>
+
+<div id="ch1" class="panel off">CH-01</div>
+<div id="ch2" class="panel off">CH-02</div>
+<div id="tower" class="panel off">Cooling Tower</div>
+
+<br>
+
+<div class="panel">
+<h3>Supply Temp</h3>
+<span id="supplyTemp">45</span> °F
+</div>
+
+<div class="panel">
+<h3>Cond Entering</h3>
+<span id="condIn">85</span> °F
+</div>
+
+<div class="panel">
+<h3>Cond Leaving</h3>
+<span id="condOut">95</span> °F
+</div>
+
+<div class="panel">
+<h3>Approach</h3>
+<span id="approach">10</span> °F
+</div>
+
+<div class="panel">
+<h3>Plant kW</h3>
+<span id="plantKW">0</span>
+</div>
+
+<div class="panel">
+<h3>kW / RT</h3>
+<span id="kwrt">0</span>
+</div>
+
+<br><br>
+<canvas id="trend" width="900" height="300"></canvas>
+
+<script>
+let systemOn=false
+let alarm=false
+let temp=45
+let lead="CH-01"
+
+const cutOut=41
+const restart=44
+const rotateTime=60
+let rotateTimer=0
+
+let ch1={run:false}
+let ch2={run:false}
+
+function startPlant(){systemOn=true}
+function stopPlant(){systemOn=false;ch1.run=false;ch2.run=false}
+function resetAlarm(){
+ if(alarm){
+  alarm=false
+  document.getElementById("alarmText").innerText="NONE"
+  document.getElementById("alarmText").className="normal"
+ }
+}
+
+function updateUI(){
+ document.getElementById("supplyTemp").innerText=temp.toFixed(1)
+ document.getElementById("ch1").className="panel "+(ch1.run?"on":"off")
+ document.getElementById("ch2").className="panel "+(ch2.run?"on":"off")
+ document.getElementById("tower").className="panel "+((ch1.run||ch2.run)?"on":"off")
+ document.getElementById("loadVal").innerText=document.getElementById("loadSlider").value
+}
+
+function plantLogic(){
+
+ if(!systemOn) return
+
+ let load=parseInt(document.getElementById("loadSlider").value)
+
+ rotateTimer++
+ if(rotateTimer>=rotateTime){
+  lead=(lead==="CH-01")?"CH-02":"CH-01"
+  rotateTimer=0
+ }
+
+ if(temp<=cutOut){
+  alarm=true
+  ch1.run=false
+  ch2.run=false
+  document.getElementById("alarmText").innerText="LOW TEMP TRIP"
+  document.getElementById("alarmText").className="alarm"
+ }
+
+ if(alarm) return
+
+ let need2 = load>70
+
+ if(temp>=restart){
+  if(need2){
+   ch1.run=true
+   ch2.run=true
+  }else{
+   if(lead==="CH-01"){ch1.run=true;ch2.run=false}
+   else{ch2.run=true;ch1.run=false}
+  }
+ }
+
+}
+
+function plantPhysics(){
+
+ if(!systemOn) return
+
+ let load=parseInt(document.getElementById("loadSlider").value)
+ let running=(ch1.run?1:0)+(ch2.run?1:0)
+
+ if(running>0){ temp-=0.07*running }
+ temp+= (load/100)*0.05
+
+ // Condenser simulation
+ let condEntering=80 + (load/100)*10
+ let condLeaving=condEntering + (running*5)
+ let approach=condLeaving-condEntering
+
+ document.getElementById("condIn").innerText=condEntering.toFixed(1)
+ document.getElementById("condOut").innerText=condLeaving.toFixed(1)
+ document.getElementById("approach").innerText=approach.toFixed(1)
+
+ // kW & Efficiency
+ let totalRT=load*5
+ let plantKW=running*150 + load*2
+ let kwrt=(plantKW/totalRT)
+
+ document.getElementById("plantKW").innerText=plantKW.toFixed(0)
+ document.getElementById("kwrt").innerText=kwrt.toFixed(2)
+
+ addData(temp)
+}
+
+setInterval(()=>{
+ plantLogic()
+ plantPhysics()
+ updateUI()
+},1000)
+
+/* Trend */
+const ctx=document.getElementById('trend').getContext('2d')
+const chart=new Chart(ctx,{
+ type:'line',
+ data:{labels:[],datasets:[{label:'Supply Temp °F',data:[],borderWidth:2,tension:0.1}]},
+ options:{animation:false,scales:{x:{display:false},y:{min:35,max:55}}}
+})
+
+function addData(v){
+ let t=new Date().toLocaleTimeString()
+ chart.data.labels.push(t)
+ chart.data.datasets[0].data.push(v)
+ if(chart.data.labels.length>50){
+  chart.data.labels.shift()
+  chart.data.datasets[0].data.shift()
+ }
+ chart.update()
+}
+
+updateUI()
+</script>
+
+</body>
+</html>
