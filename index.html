@@ -2,155 +2,104 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Chiller Management System - 2D SCADA</title>
+<title>Chiller Management System - 2D SCADA PRO</title>
 <style>
-body{
-  margin:0;
-  background:white;
-  font-family:Segoe UI,Arial;
-  overflow:hidden;
-}
-svg{
-  width:1920px;
-  height:1080px;
-  display:block;
-  margin:auto;
-}
+body{margin:0;background:white;font-family:Segoe UI,Arial}
+svg{width:1920px;height:1080px;display:block;margin:auto}
 
-/* Equipment */
-.chiller{fill:#d9dee4;stroke:#555;stroke-width:3}
-.tower{fill:#cfd6dd;stroke:#555;stroke-width:3}
-.pump{fill:#2ecc71;stroke:#222;stroke-width:2}
-.pump.off{fill:#b0b0b0}
-.pipeCW{stroke:#d6a04b;stroke-width:14;fill:none}
-.pipeCHWS{stroke:#00bfff;stroke-width:14;fill:none}
-.pipeCHWR{stroke:#6c63ff;stroke-width:14;fill:none}
-.flow{stroke-dasharray:20;animation:flow 1s linear infinite}
-@keyframes flow{from{stroke-dashoffset:0}to{stroke-dashoffset:-40}}
+/* Pipes */
+.pipeCW{stroke:#d6a04b;stroke-width:14;fill:none;stroke-linecap:round}
+.pipeCHWS{stroke:#00bfff;stroke-width:14;fill:none;stroke-linecap:round}
+.pipeCHWR{stroke:#6c63ff;stroke-width:14;fill:none;stroke-linecap:round}
+.flow{stroke-dasharray:25;animation:flow 1s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-50}}
 
-.tag{font-size:20px;fill:#111}
-.header{font-size:30px;font-weight:bold}
-
-.panel{
- position:absolute;
- top:20px;
- right:20px;
- background:#f4f6f8;
- padding:20px;
- border-radius:10px;
- box-shadow:0 4px 10px rgba(0,0,0,.2);
-}
-button{padding:8px 16px;margin:5px}
-.alarm{color:red;font-weight:bold}
+.label{font-size:18px;fill:#222}
+.title{font-size:30px;font-weight:bold}
 </style>
 </head>
 <body>
 
 <svg viewBox="0 0 1920 1080">
 
-<text x="650" y="60" class="header">CHILLER MANAGEMENT SYSTEM</text>
+<text x="650" y="60" class="title">CHILLER MANAGEMENT SYSTEM</text>
 
-<!-- Cooling Towers -->
-<rect x="150" y="150" width="200" height="200" class="tower"/>
-<rect x="400" y="150" width="200" height="200" class="tower"/>
-<text x="180" y="140" class="tag">CT-01</text>
-<text x="430" y="140" class="tag">CT-02</text>
+<!-- ================= COOLING TOWER ================= -->
+<g transform="translate(150,150)">
+  <!-- body -->
+  <polygon points="0,0 180,0 150,200 30,200" fill="#cfd6dd" stroke="#555" stroke-width="3"/>
+  <!-- grill -->
+  <line x1="40" y1="40" x2="140" y2="40" stroke="#888" stroke-width="2"/>
+  <line x1="40" y1="70" x2="140" y2="70" stroke="#888" stroke-width="2"/>
+  <line x1="40" y1="100" x2="140" y2="100" stroke="#888" stroke-width="2"/>
+  <!-- legs -->
+  <rect x="30" y="200" width="20" height="40" fill="#999"/>
+  <rect x="130" y="200" width="20" height="40" fill="#999"/>
+</g>
+<text x="200" y="130" class="label">CT-01</text>
 
-<!-- Condenser Pumps -->
-<circle cx="200" cy="750" r="35" class="pump" id="CDP1"/>
-<circle cx="350" cy="750" r="35" class="pump" id="CDP2"/>
-<circle cx="500" cy="750" r="35" class="pump" id="CDP3"/>
-<text x="150" y="820" class="tag">CDP-01</text>
-<text x="300" y="820" class="tag">CDP-02</text>
-<text x="450" y="820" class="tag">CDP-03</text>
+<g transform="translate(400,150)">
+  <polygon points="0,0 180,0 150,200 30,200" fill="#cfd6dd" stroke="#555" stroke-width="3"/>
+  <line x1="40" y1="40" x2="140" y2="40" stroke="#888" stroke-width="2"/>
+  <line x1="40" y1="70" x2="140" y2="70" stroke="#888" stroke-width="2"/>
+  <line x1="40" y1="100" x2="140" y2="100" stroke="#888" stroke-width="2"/>
+  <rect x="30" y="200" width="20" height="40" fill="#999"/>
+  <rect x="130" y="200" width="20" height="40" fill="#999"/>
+</g>
+<text x="450" y="130" class="label">CT-02</text>
 
-<!-- Chillers -->
-<rect x="750" y="500" width="300" height="150" class="chiller"/>
-<rect x="1150" y="500" width="300" height="150" class="chiller"/>
-<text x="820" y="480" class="tag">CH-01</text>
-<text x="1220" y="480" class="tag">CH-02</text>
+<!-- ================= CHILLERS ================= -->
+<g transform="translate(750,500)">
+  <ellipse cx="0" cy="75" rx="40" ry="75" fill="#cfd6dd" stroke="#555" stroke-width="3"/>
+  <rect x="0" y="0" width="300" height="150" fill="#d9dee4" stroke="#555" stroke-width="3"/>
+  <ellipse cx="300" cy="75" rx="40" ry="75" fill="#cfd6dd" stroke="#555" stroke-width="3"/>
+</g>
+<text x="820" y="480" class="label">CH-01</text>
 
-<!-- CHW Pumps -->
-<circle cx="900" cy="900" r="35" class="pump" id="CHP1"/>
-<circle cx="1050" cy="900" r="35" class="pump" id="CHP2"/>
-<circle cx="1200" cy="900" r="35" class="pump" id="CHP3"/>
-<text x="850" y="970" class="tag">CHP-01</text>
-<text x="1000" y="970" class="tag">CHP-02</text>
-<text x="1150" y="970" class="tag">CHP-03</text>
+<g transform="translate(1150,500)">
+  <ellipse cx="0" cy="75" rx="40" ry="75" fill="#cfd6dd" stroke="#555" stroke-width="3"/>
+  <rect x="0" y="0" width="300" height="150" fill="#d9dee4" stroke="#555" stroke-width="3"/>
+  <ellipse cx="300" cy="75" rx="40" ry="75" fill="#cfd6dd" stroke="#555" stroke-width="3"/>
+</g>
+<text x="1220" y="480" class="label">CH-02</text>
 
-<!-- Building Return -->
+<!-- ================= PUMP SYMBOL ================= -->
+<defs>
+  <g id="pumpSymbol">
+    <circle cx="0" cy="0" r="35" fill="#2ecc71" stroke="#222" stroke-width="3"/>
+    <path d="M-10,-15 L20,0 L-10,15 Z" fill="white"/>
+  </g>
+</defs>
+
+<!-- CDP -->
+<use href="#pumpSymbol" x="200" y="750"/>
+<use href="#pumpSymbol" x="350" y="750"/>
+<use href="#pumpSymbol" x="500" y="750"/>
+<text x="150" y="820" class="label">CDP-01</text>
+<text x="300" y="820" class="label">CDP-02</text>
+<text x="450" y="820" class="label">CDP-03</text>
+
+<!-- CHP -->
+<use href="#pumpSymbol" x="900" y="900"/>
+<use href="#pumpSymbol" x="1050" y="900"/>
+<use href="#pumpSymbol" x="1200" y="900"/>
+<text x="850" y="970" class="label">CHP-01</text>
+<text x="1000" y="970" class="label">CHP-02</text>
+<text x="1150" y="970" class="label">CHP-03</text>
+
+<!-- ================= PIPING (CURVED) ================= -->
+<!-- Condenser -->
+<path d="M250 350 V700 H500 Q650 700 750 575" class="pipeCW flow"/>
+<!-- CHW Supply -->
+<path d="M1100 575 H1650" class="pipeCHWS flow"/>
+<!-- CHW Return -->
+<path d="M1650 630 Q1400 800 900 900" class="pipeCHWR flow"/>
+
+<!-- Building -->
 <rect x="1650" y="550" width="200" height="120" fill="#e2e8f0" stroke="#555" stroke-width="3"/>
-<text x="1660" y="530" class="tag">BUILDING RETURN</text>
-
-<!-- Pipes -->
-<line x1="250" y1="350" x2="250" y2="715" class="pipeCW flow"/>
-<line x1="350" y1="350" x2="350" y2="715" class="pipeCW flow"/>
-
-<line x1="250" y1="750" x2="900" y2="575" class="pipeCW flow"/>
-<line x1="1050" y1="575" x2="1650" y2="575" class="pipeCHWS flow"/>
-<line x1="1650" y1="630" x2="900" y2="900" class="pipeCHWR flow"/>
-
-<!-- Tags -->
-<text x="1000" y="520" class="tag">Supply Temp: <tspan id="temp">45°F</tspan></text>
-<text x="1000" y="560" class="tag">Flow: <tspan id="flow">600 gpm</tspan></text>
-<text x="1000" y="600" class="tag">Plant kW: <tspan id="kw">250</tspan></text>
+<text x="1660" y="530" class="label">BUILDING RETURN</text>
 
 </svg>
-
-<div class="panel">
-<button onclick="start()">START</button>
-<button onclick="stop()">STOP</button>
-<button onclick="resetAlarm()">RESET</button>
-<br><br>
-Load %
-<input type="range" min="10" max="100" value="50" id="load">
-<br><br>
-Alarm: <span id="alarmText">NONE</span>
-</div>
-
-<script>
-let running=false
-let alarm=false
-let temp=45
-const cutOut=41
-const restart=44
-
-function start(){
- if(!alarm) running=true
-}
-function stop(){
- running=false
-}
-function resetAlarm(){
- alarm=false
- document.getElementById("alarmText").innerText="NONE"
-}
-
-setInterval(()=>{
- let load=document.getElementById("load").value
-
- if(running && !alarm){
-   temp -= 0.08
-   temp += load/2000
-
-   if(temp<=cutOut){
-     alarm=true
-     running=false
-     document.getElementById("alarmText").innerText="LOW TEMP TRIP"
-     document.getElementById("alarmText").className="alarm"
-   }
- }
-
- if(!running && !alarm && temp>=restart){
-   running=true
- }
-
- document.getElementById("temp").innerText=temp.toFixed(1)+"°F"
- document.getElementById("flow").innerText=(load*10).toFixed(0)+" gpm"
- document.getElementById("kw").innerText=(load*5).toFixed(0)
-
-},1000)
-</script>
 
 </body>
 </html>
