@@ -2,186 +2,124 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Chiller Plant BMS Graphic</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>Chiller Management System - SCADA</title>
 <style>
-body{margin:0;background:#0f1720;color:white;font-family:Arial}
-h2{text-align:center;margin:10px}
+body{
+  margin:0;
+  background:#e9edf2;
+  font-family:Segoe UI,Arial;
+  overflow:hidden;
+}
+svg{
+  width:1920px;
+  height:1080px;
+  display:block;
+  margin:auto;
+  background:linear-gradient(#f8fafc,#dde3ea);
+}
 
-.panel{position:absolute;top:10px;left:20px;z-index:10}
-button{margin:5px;padding:6px 12px}
-input{margin-left:5px}
-
-svg{background:#111b24;display:block;margin:auto}
-
-.equip{fill:#3b3f46;stroke:white;stroke-width:2}
-.running{fill:#1abc9c}
-.alarmFlash{animation:flash 1s infinite}
-@keyframes flash{0%{fill:red}50%{fill:#3b3f46}100%{fill:red}}
-
-.pipeCHW{stroke:#00bfff;stroke-width:6;fill:none}
-.pipeCW{stroke:#ff9f43;stroke-width:6;fill:none}
-.flow{stroke-dasharray:10;animation:flow 1s linear infinite}
-@keyframes flow{from{stroke-dashoffset:0}to{stroke-dashoffset:-20}}
-
-.text{fill:white;font-size:13px}
-.value{fill:#00ffcc;font-weight:bold}
-
-.chartBox{width:90%;margin:auto;margin-top:10px}
+/* Equipment */
+.chiller{fill:#cfd6dd;stroke:#888;stroke-width:3}
+.pump{fill:#4CAF50;stroke:#222;stroke-width:2}
+.pump.off{fill:#b0b0b0}
+.tower{fill:#bfc7ce;stroke:#666;stroke-width:3}
+.valve{fill:#2f855a}
+.pipeCW{stroke:#d6a04b;stroke-width:14;fill:none}
+.pipeCHWS{stroke:#00bfff;stroke-width:14;fill:none}
+.pipeCHWR{stroke:#5a67d8;stroke-width:14;fill:none}
+.tag{font-size:18px;fill:#1a202c}
+.header{font-size:26px;font-weight:bold}
+.panel{
+  position:absolute;
+  top:20px;
+  right:20px;
+  background:white;
+  padding:20px;
+  border-radius:8px;
+  box-shadow:0 4px 10px rgba(0,0,0,.2);
+}
+button{
+  padding:8px 16px;
+  margin:5px;
+}
 </style>
 </head>
 <body>
 
-<h2>Water-Cooled Chiller Plant - BMS Graphic</h2>
+<svg viewBox="0 0 1920 1080">
 
-<div class="panel">
-<button onclick="startPlant()">START</button>
-<button onclick="stopPlant()">STOP</button>
-<button onclick="resetAlarm()">RESET</button>
-Load:
-<input type="range" min="10" max="100" value="50" id="load">
-<span id="loadVal">50</span>%
-<br>
-Alarm: <span id="alarmText" style="color:#00ff99">NONE</span>
-</div>
+<!-- HEADER -->
+<text x="700" y="60" class="header">CHILLER MANAGEMENT SYSTEM</text>
 
-<svg width="1300" height="650">
+<!-- COOLING TOWERS -->
+<rect x="200" y="120" width="220" height="220" class="tower"/>
+<rect x="450" y="120" width="220" height="220" class="tower"/>
+<text x="240" y="110" class="tag">CT-01</text>
+<text x="490" y="110" class="tag">CT-02</text>
 
-<!-- Cooling Towers -->
-<rect id="CT1" x="350" y="40" width="200" height="100" class="equip"/>
-<rect id="CT2" x="750" y="40" width="200" height="100" class="equip"/>
-<text x="410" y="100" class="text">CT-01</text>
-<text x="810" y="100" class="text">CT-02</text>
+<!-- CONDENSER PUMPS -->
+<circle cx="250" cy="700" r="40" class="pump" id="CDP1"/>
+<circle cx="400" cy="700" r="40" class="pump" id="CDP2"/>
+<circle cx="550" cy="700" r="40" class="pump" id="CDP3"/>
+<text x="210" y="760" class="tag">CDP-01</text>
+<text x="360" y="760" class="tag">CDP-02</text>
+<text x="510" y="760" class="tag">CDP-03</text>
 
-<!-- Chillers -->
-<rect id="CH1" x="300" y="300" width="250" height="140" class="equip"/>
-<rect id="CH2" x="750" y="300" width="250" height="140" class="equip"/>
-<text x="380" y="370" class="text">CH-01</text>
-<text x="830" y="370" class="text">CH-02</text>
+<!-- CHILLERS -->
+<rect x="800" y="500" width="300" height="160" class="chiller"/>
+<rect x="1150" y="500" width="300" height="160" class="chiller"/>
+<text x="890" y="490" class="tag">CH-01</text>
+<text x="1240" y="490" class="tag">CH-02</text>
 
-<!-- Pumps -->
-<circle id="CWP1" cx="250" cy="360" r="25" class="equip"/>
-<circle id="CWP2" cx="1050" cy="360" r="25" class="equip"/>
-<text x="220" y="410" class="text">CWP-1</text>
-<text x="1020" y="410" class="text">CWP-2</text>
+<!-- CHILLED WATER PUMPS -->
+<circle cx="950" cy="900" r="40" class="pump" id="CHP1"/>
+<circle cx="1100" cy="900" r="40" class="pump" id="CHP2"/>
+<circle cx="1250" cy="900" r="40" class="pump" id="CHP3"/>
+<text x="910" y="960" class="tag">CHP-01</text>
+<text x="1060" y="960" class="tag">CHP-02</text>
+<text x="1210" y="960" class="tag">CHP-03</text>
 
-<circle id="CHWP1" cx="550" cy="520" r="25" class="equip"/>
-<circle id="CHWP2" cx="850" cy="520" r="25" class="equip"/>
-<text x="520" y="570" class="text">CHWP-1</text>
-<text x="820" y="570" class="text">CHWP-2</text>
+<!-- BUILDING RETURN -->
+<rect x="1650" y="550" width="200" height="120" fill="#cbd5e0" stroke="#555" stroke-width="3"/>
+<text x="1670" y="530" class="tag">BUILDING RETURN</text>
 
-<!-- CW Pipes -->
-<line id="cw1" x1="450" y1="140" x2="450" y2="300" class="pipeCW"/>
-<line id="cw2" x1="850" y1="140" x2="850" y2="300" class="pipeCW"/>
+<!-- PIPES -->
+<line x1="300" y1="340" x2="300" y2="660" class="pipeCW"/>
+<line x1="450" y1="340" x2="450" y2="660" class="pipeCW"/>
+<line x1="250" y1="740" x2="1100" y2="580" class="pipeCW"/>
 
-<!-- CHW Pipes -->
-<line id="chw1" x1="550" y1="440" x2="550" y2="495" class="pipeCHW"/>
-<line id="chw2" x1="850" y1="440" x2="850" y2="495" class="pipeCHW"/>
-
-<!-- Temp Display -->
-<text x="600" y="250" class="text">Supply Temp:</text>
-<text id="tempVal" x="720" y="250" class="value">45°F</text>
+<line x1="1100" y1="580" x2="1700" y2="580" class="pipeCHWS"/>
+<line x1="1700" y1="630" x2="950" y2="900" class="pipeCHWR"/>
 
 </svg>
 
-<div class="chartBox">
-<canvas id="trend"></canvas>
+<div class="panel">
+<button onclick="start()">START</button>
+<button onclick="stop()">STOP</button>
+<br><br>
+Supply Temp: <span id="temp">45°F</span><br>
+Load %: <input type="range" min="10" max="100" value="50" id="load">
 </div>
 
 <script>
-
 let running=false
-let alarm=false
 let temp=45
 
-const cutOut=41
-const restart=44
-
-const chart=new Chart(document.getElementById("trend"),{
- type:'line',
- data:{
-  labels:[],
-  datasets:[{
-   label:"Supply Temp °F",
-   data:[],
-   borderColor:"#00bfff",
-   tension:0.2
-  }]
- },
- options:{animation:false,scales:{y:{min:35,max:50}}}
-})
-
-function startPlant(){
- if(!alarm){
+function start(){
   running=true
-  setRunning(true)
- }
+}
+function stop(){
+  running=false
 }
 
-function stopPlant(){
- running=false
- setRunning(false)
-}
-
-function resetAlarm(){
- if(alarm){
-  alarm=false
-  document.getElementById("alarmText").innerText="NONE"
-  document.getElementById("alarmText").style.color="#00ff99"
-  document.getElementById("CH1").classList.remove("alarmFlash")
- }
-}
-
-function setRunning(state){
- ["CT1","CT2","CH1","CH2","CWP1","CWP2","CHWP1","CHWP2"].forEach(id=>{
-  document.getElementById(id).classList.toggle("running",state)
- })
- ["cw1","cw2","chw1","chw2"].forEach(id=>{
-  document.getElementById(id).classList.toggle("flow",state)
- })
-}
-
-function loop(){
-
- let load=parseInt(document.getElementById("load").value)
- document.getElementById("loadVal").innerText=load
-
- if(running && !alarm){
-
-  temp -= 0.07
-  temp += (load/100)*0.05
-
-  if(temp<=cutOut){
-   alarm=true
-   running=false
-   document.getElementById("alarmText").innerText="LOW TEMP TRIP"
-   document.getElementById("alarmText").style.color="red"
-   document.getElementById("CH1").classList.add("alarmFlash")
-   setRunning(false)
+setInterval(()=>{
+  let load=document.getElementById("load").value
+  if(running){
+    temp -= 0.05
+    temp += load/2000
   }
-
- }
-
- if(!running && !alarm && temp>=restart){
-  setRunning(true)
- }
-
- document.getElementById("tempVal").innerText=temp.toFixed(1)+"°F"
-
- chart.data.labels.push("")
- chart.data.datasets[0].data.push(temp)
-
- if(chart.data.labels.length>50){
-  chart.data.labels.shift()
-  chart.data.datasets[0].data.shift()
- }
-
- chart.update()
-
-}
-
-setInterval(loop,1000)
-
+  document.getElementById("temp").innerText=temp.toFixed(1)+"°F"
+},1000)
 </script>
 
 </body>
