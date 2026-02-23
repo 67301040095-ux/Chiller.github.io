@@ -2,198 +2,186 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Plant Room BMS Dashboard</title>
+<title>Chiller Plant BMS Graphic</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-body{background:#101418;color:white;font-family:Arial;text-align:center}
-.panel{display:inline-block;border:1px solid #444;padding:10px;margin:8px;width:200px}
-.on{background:green}
-.off{background:#333}
-.alarm{color:red;font-weight:bold}
-.normal{color:#00ff99;font-weight:bold}
-input[type=range]{width:250px}
-h3{margin:5px}
+body{margin:0;background:#0f1720;color:white;font-family:Arial}
+h2{text-align:center;margin:10px}
+
+.panel{position:absolute;top:10px;left:20px;z-index:10}
+button{margin:5px;padding:6px 12px}
+input{margin-left:5px}
+
+svg{background:#111b24;display:block;margin:auto}
+
+.equip{fill:#3b3f46;stroke:white;stroke-width:2}
+.running{fill:#1abc9c}
+.alarmFlash{animation:flash 1s infinite}
+@keyframes flash{0%{fill:red}50%{fill:#3b3f46}100%{fill:red}}
+
+.pipeCHW{stroke:#00bfff;stroke-width:6;fill:none}
+.pipeCW{stroke:#ff9f43;stroke-width:6;fill:none}
+.flow{stroke-dasharray:10;animation:flow 1s linear infinite}
+@keyframes flow{from{stroke-dashoffset:0}to{stroke-dashoffset:-20}}
+
+.text{fill:white;font-size:13px}
+.value{fill:#00ffcc;font-weight:bold}
+
+.chartBox{width:90%;margin:auto;margin-top:10px}
 </style>
 </head>
 <body>
 
-<h2>Water-Cooled Chiller Plant Dashboard</h2>
+<h2>Water-Cooled Chiller Plant - BMS Graphic</h2>
 
+<div class="panel">
 <button onclick="startPlant()">START</button>
 <button onclick="stopPlant()">STOP</button>
 <button onclick="resetAlarm()">RESET</button>
-
-<h3>Alarm: <span id="alarmText" class="normal">NONE</span></h3>
-
-<p>Load %</p>
-<input type="range" min="10" max="100" value="50" id="loadSlider">
-<span id="loadVal">50</span> %
-
-<br><br>
-
-<div id="ch1" class="panel off">CH-01</div>
-<div id="ch2" class="panel off">CH-02</div>
-<div id="tower" class="panel off">Cooling Tower</div>
-
+Load:
+<input type="range" min="10" max="100" value="50" id="load">
+<span id="loadVal">50</span>%
 <br>
-
-<div class="panel">
-<h3>Supply Temp</h3>
-<span id="supplyTemp">45</span> °F
+Alarm: <span id="alarmText" style="color:#00ff99">NONE</span>
 </div>
 
-<div class="panel">
-<h3>Cond Entering</h3>
-<span id="condIn">85</span> °F
-</div>
+<svg width="1300" height="650">
 
-<div class="panel">
-<h3>Cond Leaving</h3>
-<span id="condOut">95</span> °F
-</div>
+<!-- Cooling Towers -->
+<rect id="CT1" x="350" y="40" width="200" height="100" class="equip"/>
+<rect id="CT2" x="750" y="40" width="200" height="100" class="equip"/>
+<text x="410" y="100" class="text">CT-01</text>
+<text x="810" y="100" class="text">CT-02</text>
 
-<div class="panel">
-<h3>Approach</h3>
-<span id="approach">10</span> °F
-</div>
+<!-- Chillers -->
+<rect id="CH1" x="300" y="300" width="250" height="140" class="equip"/>
+<rect id="CH2" x="750" y="300" width="250" height="140" class="equip"/>
+<text x="380" y="370" class="text">CH-01</text>
+<text x="830" y="370" class="text">CH-02</text>
 
-<div class="panel">
-<h3>Plant kW</h3>
-<span id="plantKW">0</span>
-</div>
+<!-- Pumps -->
+<circle id="CWP1" cx="250" cy="360" r="25" class="equip"/>
+<circle id="CWP2" cx="1050" cy="360" r="25" class="equip"/>
+<text x="220" y="410" class="text">CWP-1</text>
+<text x="1020" y="410" class="text">CWP-2</text>
 
-<div class="panel">
-<h3>kW / RT</h3>
-<span id="kwrt">0</span>
-</div>
+<circle id="CHWP1" cx="550" cy="520" r="25" class="equip"/>
+<circle id="CHWP2" cx="850" cy="520" r="25" class="equip"/>
+<text x="520" y="570" class="text">CHWP-1</text>
+<text x="820" y="570" class="text">CHWP-2</text>
 
-<br><br>
-<canvas id="trend" width="900" height="300"></canvas>
+<!-- CW Pipes -->
+<line id="cw1" x1="450" y1="140" x2="450" y2="300" class="pipeCW"/>
+<line id="cw2" x1="850" y1="140" x2="850" y2="300" class="pipeCW"/>
+
+<!-- CHW Pipes -->
+<line id="chw1" x1="550" y1="440" x2="550" y2="495" class="pipeCHW"/>
+<line id="chw2" x1="850" y1="440" x2="850" y2="495" class="pipeCHW"/>
+
+<!-- Temp Display -->
+<text x="600" y="250" class="text">Supply Temp:</text>
+<text id="tempVal" x="720" y="250" class="value">45°F</text>
+
+</svg>
+
+<div class="chartBox">
+<canvas id="trend"></canvas>
+</div>
 
 <script>
-let systemOn=false
+
+let running=false
 let alarm=false
 let temp=45
-let lead="CH-01"
 
 const cutOut=41
 const restart=44
-const rotateTime=60
-let rotateTimer=0
 
-let ch1={run:false}
-let ch2={run:false}
+const chart=new Chart(document.getElementById("trend"),{
+ type:'line',
+ data:{
+  labels:[],
+  datasets:[{
+   label:"Supply Temp °F",
+   data:[],
+   borderColor:"#00bfff",
+   tension:0.2
+  }]
+ },
+ options:{animation:false,scales:{y:{min:35,max:50}}}
+})
 
-function startPlant(){systemOn=true}
-function stopPlant(){systemOn=false;ch1.run=false;ch2.run=false}
+function startPlant(){
+ if(!alarm){
+  running=true
+  setRunning(true)
+ }
+}
+
+function stopPlant(){
+ running=false
+ setRunning(false)
+}
+
 function resetAlarm(){
  if(alarm){
   alarm=false
   document.getElementById("alarmText").innerText="NONE"
-  document.getElementById("alarmText").className="normal"
+  document.getElementById("alarmText").style.color="#00ff99"
+  document.getElementById("CH1").classList.remove("alarmFlash")
  }
 }
 
-function updateUI(){
- document.getElementById("supplyTemp").innerText=temp.toFixed(1)
- document.getElementById("ch1").className="panel "+(ch1.run?"on":"off")
- document.getElementById("ch2").className="panel "+(ch2.run?"on":"off")
- document.getElementById("tower").className="panel "+((ch1.run||ch2.run)?"on":"off")
- document.getElementById("loadVal").innerText=document.getElementById("loadSlider").value
+function setRunning(state){
+ ["CT1","CT2","CH1","CH2","CWP1","CWP2","CHWP1","CHWP2"].forEach(id=>{
+  document.getElementById(id).classList.toggle("running",state)
+ })
+ ["cw1","cw2","chw1","chw2"].forEach(id=>{
+  document.getElementById(id).classList.toggle("flow",state)
+ })
 }
 
-function plantLogic(){
+function loop(){
 
- if(!systemOn) return
+ let load=parseInt(document.getElementById("load").value)
+ document.getElementById("loadVal").innerText=load
 
- let load=parseInt(document.getElementById("loadSlider").value)
+ if(running && !alarm){
 
- rotateTimer++
- if(rotateTimer>=rotateTime){
-  lead=(lead==="CH-01")?"CH-02":"CH-01"
-  rotateTimer=0
- }
+  temp -= 0.07
+  temp += (load/100)*0.05
 
- if(temp<=cutOut){
-  alarm=true
-  ch1.run=false
-  ch2.run=false
-  document.getElementById("alarmText").innerText="LOW TEMP TRIP"
-  document.getElementById("alarmText").className="alarm"
- }
-
- if(alarm) return
-
- let need2 = load>70
-
- if(temp>=restart){
-  if(need2){
-   ch1.run=true
-   ch2.run=true
-  }else{
-   if(lead==="CH-01"){ch1.run=true;ch2.run=false}
-   else{ch2.run=true;ch1.run=false}
+  if(temp<=cutOut){
+   alarm=true
+   running=false
+   document.getElementById("alarmText").innerText="LOW TEMP TRIP"
+   document.getElementById("alarmText").style.color="red"
+   document.getElementById("CH1").classList.add("alarmFlash")
+   setRunning(false)
   }
+
  }
 
-}
+ if(!running && !alarm && temp>=restart){
+  setRunning(true)
+ }
 
-function plantPhysics(){
+ document.getElementById("tempVal").innerText=temp.toFixed(1)+"°F"
 
- if(!systemOn) return
+ chart.data.labels.push("")
+ chart.data.datasets[0].data.push(temp)
 
- let load=parseInt(document.getElementById("loadSlider").value)
- let running=(ch1.run?1:0)+(ch2.run?1:0)
-
- if(running>0){ temp-=0.07*running }
- temp+= (load/100)*0.05
-
- // Condenser simulation
- let condEntering=80 + (load/100)*10
- let condLeaving=condEntering + (running*5)
- let approach=condLeaving-condEntering
-
- document.getElementById("condIn").innerText=condEntering.toFixed(1)
- document.getElementById("condOut").innerText=condLeaving.toFixed(1)
- document.getElementById("approach").innerText=approach.toFixed(1)
-
- // kW & Efficiency
- let totalRT=load*5
- let plantKW=running*150 + load*2
- let kwrt=(plantKW/totalRT)
-
- document.getElementById("plantKW").innerText=plantKW.toFixed(0)
- document.getElementById("kwrt").innerText=kwrt.toFixed(2)
-
- addData(temp)
-}
-
-setInterval(()=>{
- plantLogic()
- plantPhysics()
- updateUI()
-},1000)
-
-/* Trend */
-const ctx=document.getElementById('trend').getContext('2d')
-const chart=new Chart(ctx,{
- type:'line',
- data:{labels:[],datasets:[{label:'Supply Temp °F',data:[],borderWidth:2,tension:0.1}]},
- options:{animation:false,scales:{x:{display:false},y:{min:35,max:55}}}
-})
-
-function addData(v){
- let t=new Date().toLocaleTimeString()
- chart.data.labels.push(t)
- chart.data.datasets[0].data.push(v)
  if(chart.data.labels.length>50){
   chart.data.labels.shift()
   chart.data.datasets[0].data.shift()
  }
+
  chart.update()
+
 }
 
-updateUI()
+setInterval(loop,1000)
+
 </script>
 
 </body>
